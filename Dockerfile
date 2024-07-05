@@ -24,6 +24,7 @@ COPY --from=builder /app/weiruanyahei.ttf /usr/share/fonts/chinese/
 # 2.2 复制执行所需的文件
 COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 COPY --from=builder  /app/util/* /app/util/
+COPY --from=builder  /app/po/* /app/po/
 COPY --from=builder  /app/.env /app/
 COPY --from=builder  /app/*.py /app/
 
