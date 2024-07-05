@@ -10,8 +10,8 @@ from po.user import User
 import uuid
 from util.db_util import DBUtil
 
-
-
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime
 
 app = Flask(__name__)
 website_crawler = WebsitCrawler()
@@ -173,5 +173,25 @@ def deal_with_response(response):
     logger.info('-----------------------------------------')
     return jsonify(response)
 
+
+
+### cron
+def job():
+    print(f"定时任务运行中... 当前时间: {datetime.now()}")
+
+# 初始化调度器
+scheduler = BackgroundScheduler()
+scheduler.add_job(job, 'interval', seconds=10)
+
+
+
 if __name__ == '__main__':
-    asyncio.run(app.run(host='0.0.0.0', port=8040, threaded=False))
+    # 启动定时任务调度器
+    scheduler.start()
+    try:
+        asyncio.run(app.run(host='0.0.0.0', port=8040, threaded=False))
+    except (KeyboardInterrupt, SystemExit):
+        pass
+    finally:
+        scheduler.shutdown()
+
