@@ -12,4 +12,3 @@ transformers
 socksio
 python-socks
 supabase
-supabase-py

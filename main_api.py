@@ -45,7 +45,7 @@ def register():
     logger.info(f"reqStr: {reqStr}")
 
     if not reqStr:
-        return jsonify({
+        return deal_with_response({
             'code': 0,
             'msg': 'request data is required'
         }), 400
@@ -60,17 +60,16 @@ def register():
 
 
     if not email:
-        return jsonify({
+        return deal_with_response({
             'code': 0,
             'msg': 'email is required'
         }), 400
     
     # check if email is register
     exist_user = db.get_user(email)
-    logger.info(f"exist user{exist_user}")
     if exist_user:
         logger.warn(f"email {email} exist")
-        return jsonify({
+        return deal_with_response({
             'code': 0,
             'msg': 'email is registered'
         }), 400
@@ -113,7 +112,7 @@ def register():
         'msg': msg,
         'data': dataJs
     }
-    return jsonify(response)
+    return deal_with_response(response)
 
 
 
@@ -214,6 +213,11 @@ def async_worker(loop, url, tags, languages, callback_url, key):
     except Exception as e:
         logger.error(f'call_back exception:{callback_url}',e)
 
+
+def deal_with_response(response):
+    logger.info(f'return response: {response}')
+    logger.info('-------------------------------')
+    return jsonify(response)
 
 if __name__ == '__main__':
     asyncio.run(app.run(host='0.0.0.0', port=8040, threaded=False))
