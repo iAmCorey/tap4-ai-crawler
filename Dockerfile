@@ -6,6 +6,7 @@ WORKDIR /app
 COPY requirements.txt /app/
 COPY weiruanyahei.ttf /app/
 COPY util/* /app/util/
+COPY po/* /app/po/
 COPY .env /app/
 COPY *.py /app/
 
