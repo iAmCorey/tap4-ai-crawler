@@ -176,12 +176,15 @@ def deal_with_response(response):
 
 
 ### cron
-def job():
-    print(f"定时任务运行中... 当前时间: {datetime.now()}")
-
 # 初始化调度器
 scheduler = BackgroundScheduler()
-scheduler.add_job(job, 'interval', seconds=10)
+
+# test cron
+def test_cron():
+    logger.info(f"定时任务运行中... 当前时间: {datetime.now()}")
+
+# 5分钟跑一次
+scheduler.add_job(test_cron, 'interval', minutes=5)
 
 
 
