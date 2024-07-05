@@ -11,7 +11,7 @@ import uuid
 from util.db_util import DBUtil
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 app = Flask(__name__)
 website_crawler = WebsitCrawler()
@@ -31,7 +31,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# 定义时区，使用 UTC+8（例如中国时区）
+tz_utc_8 = timezone(timedelta(hours=8))
 
+
+### api
 
 ###  user service
 
@@ -181,7 +185,7 @@ scheduler = BackgroundScheduler()
 
 # test cron
 def test_cron():
-    logger.info(f"定时任务运行中... 当前时间: {datetime.now()}")
+    logger.info(f"定时任务运行中... 当前时间: {datetime.now(tz_utc_8)}")
 
 # 5分钟跑一次
 scheduler.add_job(test_cron, 'interval', minutes=5)
