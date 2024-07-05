@@ -44,6 +44,13 @@ def register():
     reqStr = request.get_json()
     logger.info(f"reqStr: {reqStr}")
 
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({'error': 'Authorization is required'}), 400
+
+    if auth_secret != auth_header:
+        return jsonify({'error': 'Authorization is error'}), 400
+
     if not reqStr:
         return deal_with_response({
             'code': 0,
@@ -51,68 +58,15 @@ def register():
         }), 400
     
 
-    name = reqStr.get('name') if reqStr.get('name') else ""
-    email = reqStr.get('email') if reqStr.get('email') else ""
-    pwd = reqStr.get('pwd') if reqStr.get('pwd') else ""
-    mobile = reqStr.get('mobile') if reqStr.get('mobile') else ""
-    source = reqStr.get('source') if reqStr.get('source') else ""
-    thumbnail_url =  reqStr.get('thumbnail_url') if reqStr.get('thumbnail_url') else ""
+    loop = asyncio.get_event_loop()
+    result = loop.run_until_complete(db.register(reqStr))
+
+    # result = db.register(reqStr)
 
 
-    if not email:
-        return deal_with_response({
-            'code': 0,
-            'msg': 'email is required'
-        }), 400
-    
-    # check if email is register
-    exist_user = db.get_user(email)
-    if exist_user:
-        logger.warn(f"email {email} exist")
-        return deal_with_response({
-            'code': 0,
-            'msg': 'email is registered'
-        }), 400
-    
-    new_user = {
-            "user_id": str(uuid.uuid4()), # uuid
-            "name": name,
-            "email": email,
-            "mobile": mobile,
-            "pwd": pwd,
-            "thumbnail_url": thumbnail_url,
-            "source": source,
-            "status": 1,
-            "type": 0,
-            
-    }
+    logger.info(f"register result: {result}")
 
-    logger.info(f"adding user: {new_user}")
-    result = db.insert_user(new_user)
-
-    logger.info(f"adding result: {result}")
-
-    # 若result为None,则 code="10001"，msg="处理异常，请稍后重试"
-    code = 200
-    msg = 'success'
-    if result is None:
-        code = 10001
-        msg = 'fail'
-
-
-    logger.info(f"user_id: {result['user_id']}")
-    #  返回user_id
-    dataJs = {}
-    if 'user_id' in result and result['user_id'] is not None:
-        dataJs['user_id'] = result['user_id']
-
-    # 将数据映射到 'data' 键下
-    response = {
-        'code': code,
-        'msg': msg,
-        'data': dataJs
-    }
-    return deal_with_response(response)
+    return deal_with_response(result)
 
 
 

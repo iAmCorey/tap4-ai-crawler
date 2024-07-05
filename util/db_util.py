@@ -2,7 +2,8 @@ import os
 from dotenv import load_dotenv
 import logging
 from supabase import create_client, Client
-from po.user import User
+import uuid
+
 # 设置日志记录
 logging.basicConfig(
     level=logging.INFO,
@@ -42,6 +43,70 @@ class DBUtil:
         except Exception as e:
             logger.error(f"DB Insert error", e)
             return None
+        
+    async def register(self, reqStr):
+        name = reqStr.get('name') if reqStr.get('name') else ""
+        email = reqStr.get('email') if reqStr.get('email') else ""
+        pwd = reqStr.get('pwd') if reqStr.get('pwd') else ""
+        mobile = reqStr.get('mobile') if reqStr.get('mobile') else ""
+        source = reqStr.get('source') if reqStr.get('source') else ""
+        thumbnail_url =  reqStr.get('thumbnail_url') if reqStr.get('thumbnail_url') else ""
+
+
+        if not email:
+            return {
+                'code': 0,
+                'msg': 'email is required'
+            }
+        
+        # check if email is register
+        exist_user = self.get_user(email)
+        if exist_user:
+            logger.warn(f"email {email} exist")
+            return {
+                'code': 0,
+                'msg': 'email is registered'
+            }
+        
+        new_user = {
+                "user_id": str(uuid.uuid4()), # uuid
+                "name": name,
+                "email": email,
+                "mobile": mobile,
+                "pwd": pwd,
+                "thumbnail_url": thumbnail_url,
+                "source": source,
+                "status": 1,
+                "type": 0,
+                
+        }
+
+        logger.info(f"adding user: {new_user}")
+        result = self.insert_user(new_user)
+
+         # 若result为None,则 code="10001"，msg="处理异常，请稍后重试"
+        code = 200
+        msg = 'success'
+        if result is None:
+            code = 10001
+            msg = 'fail'
+
+
+        logger.info(f"user_id: {result['user_id']}")
+
+        #  返回user_id
+        dataJs = {}
+        if 'user_id' in result and result['user_id'] is not None:
+            dataJs['user_id'] = result['user_id']
+
+        # 将数据映射到 'data' 键下
+        response = {
+            'code': code,
+            'msg': msg,
+            'data': dataJs
+        }
+
+        return response
         
     def get_user(self, email: str = None, user_id: str = None):
         logger.info("get user")
