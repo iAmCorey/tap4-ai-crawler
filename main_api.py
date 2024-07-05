@@ -216,7 +216,7 @@ def async_worker(loop, url, tags, languages, callback_url, key):
 
 def deal_with_response(response):
     logger.info(f'return response: {response}')
-    logger.info('-------------------------------')
+    logger.info('-----------------------------------------')
     return jsonify(response)
 
 if __name__ == '__main__':
