@@ -22,7 +22,9 @@ logger = logging.getLogger(__name__)
 
 class OSSUtil:
     def __init__(self):
-        load_dotenv()
+        # load_dotenv()
+        # 指定读取 .env.local 文件
+        load_dotenv(dotenv_path='.env.local')  
         self.S3_ENDPOINT_URL = os.getenv('S3_ENDPOINT_URL')
         self.S3_ACCESS_KEY_ID = os.getenv('S3_ACCESS_KEY_ID')
         self.S3_SECRET_ACCESS_KEY = os.getenv('S3_SECRET_ACCESS_KEY')

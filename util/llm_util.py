@@ -17,7 +17,9 @@ tokenizer = LlamaTokenizer.from_pretrained("huggyllama/llama-65b")
 
 class LLMUtil:
     def __init__(self):
-        load_dotenv()
+        # load_dotenv()
+        # 指定读取 .env.local 文件
+        load_dotenv(dotenv_path='.env.local')  
         self.groq_api_key = os.getenv('GROQ_API_KEY')
         logger.info(f"Groq API Key:{self.groq_api_key}")
         self.detail_sys_prompt = os.getenv('DETAIL_SYS_PROMPT')

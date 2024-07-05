@@ -11,3 +11,4 @@ sentencepiece
 transformers
 socksio
 python-socks
+supabase
