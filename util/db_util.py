@@ -243,8 +243,18 @@ class DBUtil:
 
     # get todo site
     # limit 数量
-    def get_todo_site(self, limit: int = 10, order_by: str = 'submit_time'):
-        logger.info("get todo site")
+    def get_todo_site(self, reqStr: str = None):
+        logger.info(f"get todo site: {reqStr}")
+
+        limit = reqStr.get('limit')
+        # 默认取10个
+        if not limit: 
+            limit = 10
+            
+        # 默认按提交时间排序
+        order_by = reqStr.get('order_by')
+        if not order_by:
+            order_by = 'submit_time'
         try:
             query = self.client.table('submit_site').select('*')
 
