@@ -495,7 +495,7 @@ def submit_site_cron():
         "limit": 100
     }
 
-    crawl_todo_site_handle()
+    crawl_todo_site_handle(reqStr)
 
 # 5分钟跑一次
 scheduler.add_job(test_cron, 'interval', minutes=5)
