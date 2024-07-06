@@ -123,8 +123,6 @@ def crawl_site_handle(reqStr: str = None):
     # 是否使用已有缓存 默认-是
     use_cache = reqStr.get('use_cache') if reqStr.get('use_cache') is not None else 1 
 
-    auth_header = request.headers.get('Authorization')
-
     if use_cache and use_cache == 1:
         # use cache
         logger.info('use cache')
