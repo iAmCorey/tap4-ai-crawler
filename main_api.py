@@ -145,8 +145,13 @@ def crawl_site_handle(reqStr: str = None):
     code = 200
     msg = 'success'
     if crawl_result is None:
-        code = 10001
-        msg = 'fail'
+        # 将数据映射到 'data' 键下
+        response = {
+            'code': 10001,
+            'msg': 'fail'
+        }
+        return response
+        
 
 
     # 插入到site表中
@@ -496,10 +501,12 @@ def test_cron():
 
 # 跑submit_site的cron
 def submit_site_cron():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     logger.info(f"跑submit_site定时任务运行中... 当前时间: {datetime.now(tz_utc_8)}")
     # 每次跑100条
     reqStr = {
-        "limit": 100
+        "limit": 50
     }
 
     crawl_todo_site_handle(reqStr)
@@ -508,7 +515,10 @@ def submit_site_cron():
 scheduler.add_job(test_cron, 'interval', minutes=5)
 
 # 2小时跑一次
-scheduler.add_job(submit_site_cron, 'interval', hours=1)
+# scheduler.add_job(submit_site_cron, 'interval', hours=1)
+
+# test 
+scheduler.add_job(submit_site_cron, 'interval', minutes=30)
 
 
 
