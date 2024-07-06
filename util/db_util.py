@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import logging
 from supabase import create_client, Client
 import uuid
+from datetime import datetime, timezone, timedelta
 
 # 设置日志记录
 logging.basicConfig(
@@ -10,6 +11,7 @@ logging.basicConfig(
     format='%(asctime)s - %(filename)s - %(funcName)s - %(lineno)d - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
 
 class DBUtil:
     def __init__(self):
@@ -22,6 +24,34 @@ class DBUtil:
         self.client: Client = create_client(self.supbase_url, self.supbase_key)
         logger.info(f"supbase url: {self.supbase_url}")
 
+    ### user service
+    def get_user(self, email: str = None, user_id: str = None):
+        logger.info("get user")
+        try:
+            query = self.client.table('mb_user').select('*')
+            if email:
+                logger.info(f"by email: {email}")
+                query = query.eq('email', email)
+            if user_id:
+                logger.info(f"by user_id: {user_id}")
+                query = query.eq('user_id', user_id)
+
+            response = query.execute()
+            
+
+            if response.data:
+                logging.info(f"query success{response.data}")
+                 # 获取查询的数据
+                result = response.data[0]
+                
+                return result
+            else:
+                logging.warning(f"query fail: {response}")
+                return None
+        except Exception as e:
+            logger.error(f"DB Insert error", e)
+            return None
+
     def insert_user(self, user):
         logger.info(f"insert new user: {user}")
         try:
@@ -32,13 +62,13 @@ class DBUtil:
             )
 
             if response.data:
-                print("insert suceess:", response.data)
+                logging.info(f"insert success: {response.data}")
                  # 获取插入的数据
                 result = response.data[0]
                 
                 return result
             else:
-                print("insert fail:", response)
+                logging.warning(f"insert fail: {response}")
                 return None
         except Exception as e:
             logger.error(f"DB Insert error", e)
@@ -62,7 +92,7 @@ class DBUtil:
         # check if email is register
         exist_user = self.get_user(email)
         if exist_user:
-            logger.warn(f"email {email} exist")
+            logger.warning(f"email {email} exist")
             return {
                 'code': 0,
                 'msg': 'email is registered'
@@ -108,44 +138,178 @@ class DBUtil:
 
         return response
         
-    def get_user(self, email: str = None, user_id: str = None):
-        logger.info("get user")
-        try:
-            query = self.client.table('mb_user').select('*')
-            if email:
-                logger.info(f"by email: {email}")
-                query = query.eq('email', email)
-            if user_id:
-                logger.info(f"by user_id: {user_id}")
-                query = query.eq('user_id', user_id)
 
+
+    ### site service
+    # get site from table `site`
+    def get_site(self, url: str = None, name: str = None):
+        logger.info(f"get site")
+        try:
+            query = self.client.table('mb_site').select('*')
+            if url:
+                logger.info(f"by url: {url}")
+                query = query.eq('url', url)
+            if name:
+                logger.info(f"by name: {name}")
+                query = query.eq('name', name)
+         
             response = query.execute()
             
 
             if response.data:
-                print("query suceess:", response.data)
+                logging.info(f"query success{response.data}")
                  # 获取查询的数据
+                result = response.data
+                
+                return result
+            else:
+                logging.warning(f"query fail: {response}")
+                return None
+        except Exception as e:
+            logger.error(f"DB Insert error", e)
+            return None
+        
+    def upsert_site(self, site):
+        logger.info(f"upsert new site: {site}")
+
+        site['update_time'] = datetime.now().isoformat()
+
+        try:
+            response = (
+                self.client.table("mb_site")
+                .upsert(site)
+                .execute()
+            )
+
+            if response.data:
+                logging.info(f"upsert success: {response.data}")
+                 # 获取插入的数据
                 result = response.data[0]
                 
                 return result
             else:
-                print("query fail:", response)
+                logging.warning(f"upsert fail: {response}")
+                return None
+        except Exception as e:
+            logger.error(f"DB upsert error", e)
+            return None
+    
+    # insert site to table `site`
+    def insert_site(self, site):
+        logger.info(f"insert new site: {site}")
+        try:
+            response = (
+                self.client.table("mb_site")
+                .insert(site)
+                .execute()
+            )
+
+            if response.data:
+                logging.info(f"insert success: {response.data}")
+                 # 获取插入的数据
+                result = response.data[0]
+                
+                return result
+            else:
+                logging.warning(f"insert fail: {response}")
+                return None
+        except Exception as e:
+            logger.error(f"DB Insert error", e)
+            return None
+    
+     # insert site in table `site` by url
+    def update_site_by_url(self, site):
+        logger.info(f"insert new site: {site}")
+        try:
+            response = (
+                self.client.table("mb_site")
+                .insert(site)
+                .execute()
+            )
+
+            if response.data:
+                logging.info(f"insert success: {response.data}")
+                 # 获取插入的数据
+                result = response.data[0]
+                
+                return result
+            else:
+                logging.warning(f"insert fail: {response}")
                 return None
         except Exception as e:
             logger.error(f"DB Insert error", e)
             return None
 
 
+    # get todo site
+    # limit 数量
+    def get_todo_site(self, limit: int = 10, order_by: str = 'submit_time'):
+        logger.info("get todo site")
+        try:
+            query = self.client.table('submit_site').select('*')
+
+            # 选择还未处理的site
+            query = query.eq('status', 0)
+
+            # 排序
+            if order_by == 'submit_time':
+                # 按提交时间排序
+                query = query.order("submit_time", desc=True)
+            elif order_by == 'priority':
+                # 按优先级排序
+                query = query.order('priority', desc=True)
+            
+            # 取固定数量
+            query = query.limit(limit)
+            response = query.execute()
+            
+
+            if response.data:
+                logging.info(f"query success: {len(response.data)}")
+                 # 获取查询的数据
+                result = response.data
+                
+                return result
+            else:
+                logging.warning(f"query fail: {response}")
+                return None
+        except Exception as e:
+            logger.error(f"DB Insert error", e)
+            return None
+
     def insert_submit_site(self, submit_site):
         logger.info(f"insert submit site: {submit_site}")
+
+        # 先检查url是否存在
+        query = self.client.table('submit_site').select('*').eq('url', submit_site['url'])
+        response = query.execute()
+        if response.data:
+            logger.warning(f'url {submit_site["url"]} exists')
+            return None
         try:
             response = (
                 self.client.table("submit_site")
                 .insert(submit_site)
                 .execute()
             )
-            logger.info(f"insert res: {e}")
-            return response
+            logger.info(f"insert res: {response.data}")
+            return response.data[0]
         except Exception as e:
             logger.error(f"DB Insert error", e)
+            return None
+
+    def update_todo_to_done_by_url(self, url):
+        logger.info(f"update todo site to done {url}")
+
+        try:
+            response = (
+                self.client.table("submit_site")
+                .update({"status": 1})
+                .eq('url', url)
+                .execute()
+            )
+            logger.info(f"update res: {response.data}")
+            return response.data[0]
+        except Exception as e:
+            logger.error(f"DB update error", e)
             return None
