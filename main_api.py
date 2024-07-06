@@ -318,44 +318,53 @@ def crawl_todo_site_handle(reqStr):
     for todo_site in todo_site_list:
         this_result = {}
         this_result['id'] = todo_site['id']
-        if todo_site['url']:
-            this_result['url'] = todo_site['url']
-            logger.info(f"crawl submit site: {todo_site['url']}")
 
-            handle_res = crawl_site_handle(todo_site)
-            
-            if handle_res['code'] and handle_res['code'] > 0:
-                # crawl success, update submit_site's status
+        try:
+            if todo_site['url']:
+                this_result['url'] = todo_site['url']
+                logger.info(f"crawl submit site: {todo_site['url']}")
+
+                handle_res = crawl_site_handle(todo_site)
                 
-                update_res = db.update_todo_to_done_by_url(todo_site['url'])
-                logger.info(f"update {todo_site['url']} to done res: {update_res}")
-                
-                if update_res:
-                    response = {
-                        'code': 200,
-                        'msg': 'success'
-                    } 
-                    success += 1
+                if handle_res['code'] and handle_res['code'] > 0:
+                    # crawl success, update submit_site's status
+                    
+                    update_res = db.update_todo_to_done_by_url(todo_site['url'])
+                    logger.info(f"update {todo_site['url']} to done res: {update_res}")
+                    
+                    if update_res:
+                        response = {
+                            'code': 200,
+                            'msg': 'success'
+                        } 
+                        success += 1
+                    else:
+                        response = {
+                            'code': 0,
+                            'msg': 'update submit_site status'
+                        }
+                    
+                    
                 else:
                     response = {
                         'code': 0,
-                        'msg': 'update submit_site status'
+                        'msg': 'crawl handle fail'
                     }
-                
-                
+
+
             else:
+                # 将数据映射到 'data' 键下
                 response = {
                     'code': 0,
-                    'msg': 'crawl handle fail'
+                    'msg': 'url data is required'
                 }
-
-
-        else:
-            # 将数据映射到 'data' 键下
+        except Exception as e:
+            logger.error(f'exception: {e}')
             response = {
                 'code': 0,
-                'msg': 'url data is required'
+                'msg': 'error' + e
             }
+            
         this_result['response'] = response
         result_list.append(this_result)
 
