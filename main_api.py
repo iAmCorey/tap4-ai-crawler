@@ -147,7 +147,7 @@ def crawl_site_handle(reqStr: str = None):
     if crawl_result is None:
         # 将数据映射到 'data' 键下
         response = {
-            'code': 10001,
+            'code': 0,
             'msg': 'fail'
         }
         return response
@@ -210,7 +210,7 @@ def submit_site():
     code = 200
     msg = 'success'
     if result is None:
-        code = 10001
+        code = 0
         msg = 'insert fail'
 
 
@@ -252,11 +252,11 @@ def get_todo_site():
 
     logger.info(f"query result: {result}")
 
-    # 若result为None,则 code="10001"，msg="处理异常，请稍后重试"
+    # 若result为None,则 code="0"，msg="处理异常，请稍后重试"
     code = 200
     msg = 'success'
     if result is None:
-        code = 10001
+        code = 0
         msg = 'no data'
 
 
@@ -301,12 +301,12 @@ def crawl_todo_site_handle(reqStr):
 
     todo_site_list = db.get_todo_site(reqStr)
 
-    # 若result为None,则 code="10001"，msg="处理异常，请稍后重试"
+    # 若result为None,则 code="0"，msg="处理异常，请稍后重试"
     code = 200
     msg = 'success'
     if todo_site_list is None:
         return {
-            'code': 10001,
+            'code': 0,
             'msg': 'no data'
         }
 
@@ -412,11 +412,11 @@ def scrape():
     loop = asyncio.get_event_loop()
     result = loop.run_until_complete(website_crawler.scrape_website(url.strip(), tags, languages))
 
-    # 若result为None,则 code="10001"，msg="处理异常，请稍后重试"
+    # 若result为None,则 code="0"，msg="处理异常，请稍后重试"
     code = 200
     msg = 'success'
     if result is None:
-        code = 10001
+        code = 0
         msg = 'fail'
 
     # 将数据映射到 'data' 键下
@@ -458,7 +458,7 @@ def scrape_async():
     # 启动线程
     t.start()
 
-    # 若result为None,则 code="10001"，msg="处理异常，请稍后重试"
+    # 若result为None,则 code="0"，msg="处理异常，请稍后重试"
     code = 200
     msg = 'success'
 

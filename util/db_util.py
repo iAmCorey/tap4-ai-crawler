@@ -118,7 +118,7 @@ class DBUtil:
         code = 200
         msg = 'success'
         if result is None:
-            code = 10001
+            code = 0
             msg = 'fail'
 
 
@@ -250,7 +250,7 @@ class DBUtil:
         # 默认取10个
         if not limit: 
             limit = 10
-            
+
         # 默认按提交时间排序
         order_by = reqStr.get('order_by')
         if not order_by:
