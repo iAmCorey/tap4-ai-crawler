@@ -273,8 +273,8 @@ def get_todo_site():
 def crawl_todo_site():
     logger.info("------------------ crawlTodoSite -----------------")
     
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    # loop = asyncio.new_event_loop()
+    # asyncio.set_event_loop(loop)
     
     reqStr = request.get_json()
     logger.info(f"reqStr: {reqStr}")
@@ -503,12 +503,12 @@ def test_cron():
 
 # 跑submit_site的cron
 def submit_site_cron():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    # loop = asyncio.new_event_loop()
+    # asyncio.set_event_loop(loop)
     logger.info(f"跑submit_site定时任务运行中... 当前时间: {datetime.now(tz_utc_8)}")
     # 每次跑100条
     reqStr = {
-        "limit": 50
+        "limit": 1
     }
 
     crawl_todo_site_handle(reqStr)
@@ -520,7 +520,7 @@ scheduler.add_job(test_cron, 'interval', minutes=5)
 # scheduler.add_job(submit_site_cron, 'interval', hours=1)
 
 # test 
-scheduler.add_job(submit_site_cron, 'interval', minutes=30)
+# scheduler.add_job(submit_site_cron, 'interval', seconds=30)
 
 
 
