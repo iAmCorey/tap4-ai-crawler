@@ -273,6 +273,8 @@ def get_todo_site():
 def crawl_todo_site():
     logger.info("------------------ crawlTodoSite -----------------")
     
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     
     reqStr = request.get_json()
     logger.info(f"reqStr: {reqStr}")
