@@ -149,9 +149,6 @@ class WebsitCrawler:
                 'tags': processed_tags,
                 'languages': processed_languages,
             }
-        
-
-        
         except Exception as e:
             logger.error("处理" + url + "站点异常，错误信息:", e)
             return None
