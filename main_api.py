@@ -38,6 +38,12 @@ tz_utc_8 = timezone(timedelta(hours=8))
 
 ### api
 
+
+# pingpong
+@app.post('/test/hello')
+def hello():
+    return 'hello'
+
 ###  user service
 
 
