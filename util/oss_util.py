@@ -54,7 +54,7 @@ class OSSUtil:
         # 生成时间戳
         timestamp = int(time.time())
         # 构建默认的 file_key
-        return f"tools/{year}/{month}/{day}/{image_name}-{timestamp}.png"
+        return f"screenshot_img/{year}/{month}/{day}/{image_name}-{timestamp}.png"
 
     def upload_file_to_r2(self, file_path, file_key):
         try:
