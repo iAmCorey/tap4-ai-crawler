@@ -33,7 +33,7 @@ class AsyncURLRequest(URLRequest):
     key: str
 
 
-@app.post('/test/hello')
+@app.get('/test/hello')
 def hello():
     return 'hello'
 
