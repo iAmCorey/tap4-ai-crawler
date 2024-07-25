@@ -24,6 +24,7 @@ class LLMUtil:
         self.tag_selector_sys_prompt = os.getenv('TAG_SELECTOR_SYS_PROMPT')
         self.language_sys_prompt = os.getenv('LANGUAGE_SYS_PROMPT')
         self.groq_model = os.getenv('GROQ_MODEL')
+        logger.info(f"using model: {self.groq_model}")
         self.groq_max_tokens = int(os.getenv('GROQ_MAX_TOKENS', 5000))
         self.client = Groq(
             api_key=self.groq_api_key
