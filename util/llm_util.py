@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from groq import Groq
+from openai import OpenAI
 import logging
 from transformers import LlamaTokenizer
 from util.common_util import CommonUtil
@@ -18,17 +19,29 @@ tokenizer = LlamaTokenizer.from_pretrained("huggyllama/llama-65b")
 class LLMUtil:
     def __init__(self):
         load_dotenv()
-        self.groq_api_key = os.getenv('GROQ_API_KEY')
-        logger.info(f"Groq API Key:{self.groq_api_key}")
+        self.source = os.getenv('API_SOURCE')
+        if self.source == 'openrouter':
+            self.groq_api_key = os.getenv('OPENROUTER_API_KEY')
+            self.groq_model = os.getenv('OPENROUTER_MODEL')
+            self.client = OpenAI(
+                base_url="https://openrouter.ai/api/v1",
+                api_key=os.getenv("OPENROUTER_API_KEY"),
+            )
+        elif self.source == 'groq':
+            self.groq_api_key = os.getenv('GROQ_API_KEY')
+            self.groq_model = os.getenv('GROQ_MODEL')
+            self.client = Groq(
+                api_key=self.groq_api_key
+            )
         self.detail_sys_prompt = os.getenv('DETAIL_SYS_PROMPT')
         self.tag_selector_sys_prompt = os.getenv('TAG_SELECTOR_SYS_PROMPT')
         self.language_sys_prompt = os.getenv('LANGUAGE_SYS_PROMPT')
-        self.groq_model = os.getenv('GROQ_MODEL')
-        logger.info(f"using model: {self.groq_model}")
         self.groq_max_tokens = int(os.getenv('GROQ_MAX_TOKENS', 5000))
-        self.client = Groq(
-            api_key=self.groq_api_key
-        )
+        logger.info(f"API source:{self.source}")
+        logger.info(f"API Key:{self.groq_api_key[:10]}")
+        logger.info(f"using model: {self.groq_model}")
+        logger.info(f"max tokens: {self.groq_max_tokens}")
+        
 
     def process_detail(self, user_prompt):
         logger.info("正在处理Detail...")
@@ -75,6 +88,10 @@ class LLMUtil:
                 user_prompt = tokenizer.decode(truncated_tokens)
 
             chat_completion = self.client.chat.completions.create(
+                extra_headers={
+                    "HTTP-Referer": os.getenv('SITE_URL'), # Optional, for including your app on openrouter.ai rankings.
+                    "X-Title": os.getenv('APP_NAME'), # Optional. Shows in rankings on openrouter.ai.
+                },
                 messages=[
                     {
                         "role": "system",
@@ -86,7 +103,7 @@ class LLMUtil:
                     }
                 ],
                 model=self.groq_model,
-                temperature=0.2,
+                temperature=1.0,
             )
             if chat_completion.choices[0] and chat_completion.choices[0].message:
                 logger.info(f"LLM完成处理，成功响应!")
