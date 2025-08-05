@@ -11,3 +11,4 @@ Pillow
 sentencepiece
 transformers
 openai
+firecrawl-py

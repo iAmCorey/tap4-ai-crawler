@@ -48,7 +48,13 @@ async def scrape(request: URLRequest, authorization: Optional[str] = Header(None
         # 配置了非空的auth_secret，才验证
         validate_authorization(authorization)
 
-    result = await website_crawler.scrape_website(url.strip(), tags, languages)
+    # result = await website_crawler.scrape_website(url.strip(), tags, languages)
+    # 用firecrawl爬
+    result = await website_crawler.scrape_website_by_firecrawl(url.strip(), tags, languages)
+
+    if result is None:
+        # 将原本的当降级处理
+        result = await website_crawler.scrape_website(url.strip(), tags, languages)
 
     # 若result为None,则 code="10001"，msg="处理异常，请稍后重试"
     code = 200

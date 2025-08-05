@@ -2,11 +2,16 @@ from bs4 import BeautifulSoup
 import logging
 import time
 import random
+import os
+import base64
+import requests
 from pyppeteer import launch
 
 from util.common_util import CommonUtil
 from util.llm_util import LLMUtil
 from util.oss_util import OSSUtil
+from firecrawl import FirecrawlApp
+
 
 llm = LLMUtil()
 oss = OSSUtil()
@@ -36,6 +41,137 @@ global_agent_headers = [
 class WebsitCrawler:
     def __init__(self):
         self.browser = None
+        self.firecrawl_app = FirecrawlApp(api_key=os.getenv('FIRECRAWL_API_KEY'))
+
+    
+    async def scrape_website_by_firecrawl(self, url, tags, languages):
+        # 开始爬虫处理
+        try: 
+            # 记录程序开始时间
+            start_time = int(time.time())
+            logger.info("正在处理：" + url)
+            if not url.startswith('http://') and not url.startswith('https://'):
+                url = 'https://' + url
+
+            # 使用firecrawl爬取网页内容，包括截图
+            scrape_result = self.firecrawl_app.scrape_url(
+                url, 
+                formats=['markdown'],
+                actions=[{"type": "screenshot"}],
+                timeout=120000  # 设置超时时间为120秒（120000毫秒）
+            )
+            logger.info(f"Firecrawl 返回结果类型: {type(scrape_result)}")
+
+            if scrape_result.success:
+                logger.info(f"Firecrawl 结果: {scrape_result.success}")
+                # 转为字典
+                result_dict = scrape_result.model_dump()
+
+                # 获取markdown内容
+                markdown = result_dict.get("markdown")
+
+                # metadata
+                metadata = result_dict.get("metadata")
+                if not metadata or not metadata:
+                    logger.error(f"Firecrawl 未返回metadata/markdown: {scrape_result}")
+                    return None;
+        
+                # 从 metadata中获取title和description
+                title = metadata.get("title")
+                description = metadata.get("description")
+                if not title or not description:
+                    logger.error(f"Firecrawl 未返回title/description: {scrape_result}")
+                    return None;
+                
+            else:
+                logger.error(f"Firecrawl 爬取失败: {scrape_result}")
+                return None;
+                
+            
+            # 使用firecrawl返回的title作为name
+            name = title
+
+            logger.info(f"url:{url}, title:{title}, description:{description}")
+
+            # 处理firecrawl返回的截图
+            screenshot_key = None
+            thumnbail_key = None
+            
+            # 从firecrawl结果中获取截图URL
+            actions = result_dict.get('actions', {})
+            screenshots = actions.get('screenshots', []) if actions else []
+            
+            logger.info(f"截图信息 - actions: {actions}, screenshots: {screenshots}")
+            
+            if screenshots and len(screenshots) > 0:
+                try:
+                    # 获取第一个截图URL
+                    screenshot_url = screenshots[0]
+                    logger.info(f"获取到firecrawl截图URL: {screenshot_url}")
+                    
+                    # 生成文件key
+                    image_key = oss.get_default_file_key(url)
+                    
+                    # 下载截图文件
+                    response = requests.get(screenshot_url)
+                    response.raise_for_status()
+                    
+                    # 保存到临时文件
+                    screenshot_path = './' + url.replace("https://", "").replace("http://", "").replace("/", "").replace(".", "-") + '.png'
+                    with open(screenshot_path, 'wb') as f:
+                        f.write(response.content)
+                    
+                    # 上传图片，返回图片地址
+                    screenshot_key = oss.upload_file_to_r2(screenshot_path, image_key)
+                    # 生成缩略图
+                    thumnbail_key = oss.generate_thumbnail_image(url, image_key)
+                    
+                    logger.info(f"使用firecrawl截图成功: {screenshot_key}")
+                    
+                except Exception as screenshot_error:
+                    logger.warning(f"处理firecrawl截图失败: {screenshot_error}")
+            else:
+                logger.warning("firecrawl未返回截图数据")
+
+            # 如果tags为非空数组，则使用llm工具处理tags
+            processed_tags = None
+
+            detail = llm.process_detail(markdown)
+            if tags and detail:
+                processed_tags = llm.process_tags('tag_list is:' + ','.join(tags) + '. content is: ' + detail)
+
+            # 循环languages数组， 使用llm工具生成各种语言
+            processed_languages = []
+            if languages:
+                for language in languages:
+                    logger.info("正在处理" + url + "站点，生成" + language + "语言")
+                    processed_title = llm.process_language(language, title)
+                    processed_description = llm.process_language(language, description)
+                    processed_detail = llm.process_language(language, detail)
+                    processed_languages.append({'language': language, 'title': processed_title,
+                                                'description': processed_description, 'detail': processed_detail})
+
+            logger.info(url + "站点处理成功")
+            return {
+                'name': name,
+                'url': url,
+                'title': title,
+                'description': description,
+                'detail': detail,
+                'screenshot_data': screenshot_key,
+                'screenshot_thumbnail_data': thumnbail_key,
+                'tags': processed_tags,
+                'languages': processed_languages,
+            }
+        except Exception as e:
+            logger.error("处理" + url + "站点异常，错误信息:", e)
+            return None
+        finally:
+            # 计算程序执行时间
+            execution_time = int(time.time()) - start_time
+            # 输出程序执行时间
+            logger.info("处理" + url + "用时：" + str(execution_time) + " 秒")
+
 
     # 爬取指定URL网页内容
     async def scrape_website(self, url, tags, languages):
