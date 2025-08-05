@@ -50,6 +50,7 @@ class WebsitCrawler:
             # 记录程序开始时间
             start_time = int(time.time())
             logger.info("正在处理：" + url)
+            logger.info("使用firecrawl服务")
             if not url.startswith('http://') and not url.startswith('https://'):
                 url = 'https://' + url
 
@@ -180,6 +181,7 @@ class WebsitCrawler:
             # 记录程序开始时间
             start_time = int(time.time())
             logger.info("正在处理：" + url)
+            logger.info("使用浏览器爬取")
             if not url.startswith('http://') and not url.startswith('https://'):
                 url = 'https://' + url
 
